@@ -20,13 +20,13 @@ for file in $abspath/*
 do
 
 	file=${file##*/}
-	if [ "$file" != "README" ] && [ "$file" != "link2bin" ]; then
+	if [ "$file" != "README.md" ] && [ "$file" != "link2bin" ]; then
 
 		fullcmdpath=~/bin/$file
 		if [ -f $fullcmdpath ]; then
 			echo "File $fullcmdpath already exists, skipping..."
 		else
-			echo ln -s $abspath/$file $fullcmdpath
+			ln -s $abspath/$file $fullcmdpath
 		fi
 
 	fi
