@@ -23,5 +23,5 @@ if [ ! `which mvim` ]; then
 
 	exit
 else
-	mvim -v
+	mvim -v ${*}
 fi

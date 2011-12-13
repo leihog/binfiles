@@ -1,0 +1,124 @@
+#!/bin/bash
+
+if [ `whoami` != "root" ]; then
+	echo "No root, no keg!"
+	exit 1
+fi
+
+UPD_INTERVAL=86400
+
+CMD_DPKG=`which dpkg`
+CMD_APTGET=`which apt-get`
+CMD_APTCACHE=`which apt-cache`
+CMD_APTFILE=`which apt-file`
+[ -z $CMD_APTFILE  ] && USE_APTFILE=0 || USE_APTFILE=1
+CMD_AWK=`which awk`
+
+function check_update {
+
+	if [[ -a ~/.keg.update && ! -f ~/.keg.update ]]; then
+		echo "Aborting! ~/.keg.update is not a regular file."
+		exit 1
+	fi
+
+	nextupd=0
+	now=`date +%s`
+
+	if [ -a ~/.keg.update ]; then
+		nextupd=`cat ~/.keg.update` 
+	fi
+
+	if [ $nextupd -lt $now ]; then
+
+		echo -n "Updating cache..."
+
+		$CMD_APTGET update > /dev/null
+
+		if [ $USE_APTFILE -eq "1" ]; then
+			$CMD_APTFILE update > /dev/null
+		fi
+
+		echo "done."
+
+		future=$(($now + $UPD_INTERVAL))
+		echo $future > ~/.keg.update
+	fi
+}
+
+function show_help {
+cat <<EOM
+Example usage:
+
+  keg list [<filter>]
+    Shows a list of all installed packages.
+    If the optional filter param is given only packages matching filter is listed.
+
+  keg install <package>
+    Will download and install <package>.
+
+  keg uninstall <package>
+    Will uninstall the specified package.
+
+  keg search <pattern>
+    Will search for and list any package that matches <pattern>.
+
+  keg provides <file>
+    Will search for packages that provides the file <file>.
+
+  keg info <package>
+    Will show some information about the package.
+EOM
+}
+
+
+case "$1" in
+	list)
+		$CMD_DPKG -l $2 | $CMD_AWK '{ if ( NR > 5 && $1 == "ii" ) print $2, "(" $3 ")"; }'
+	;;
+
+	install)
+		check_update
+		$CMD_APTGET install $2
+	;;
+
+	uninstall)
+		check_update
+		$CMD_APTGET --purge remove $2
+	;;
+
+	search)
+		check_update
+		$CMD_APTCACHE search $2
+	;;
+
+	provides)
+		$CMD_DPKG -S $2 2> /dev/null
+		retval=$?
+		if [[ $retval != "0" ]]; then
+			retval=0
+			if [[ $USE_APTFILE = "1" ]]; then
+				check_update
+				$CMD_APTFILE search $2 | $CMD_AWK '{ print $1, $2; }END { if ( NR == 0 ) exit 1; }'
+				retval=$?
+			else
+				echo "Non of your installed packages provides $2"
+				echo "If you install apt-file we could search in packages that haven't been installed."
+				echo "Type: keg install apt-file to install."
+			fi
+		fi
+
+		if [ $retval -gt 0 ]; then
+			echo Could not find any packages providing $2
+		fi
+	;;
+
+	info)
+		check_update
+		$CMD_APTCACHE show $2
+	;;
+
+	*)
+		show_help
+	;;
+
+esac
