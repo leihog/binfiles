@@ -101,7 +101,7 @@ case "$1" in
 				$CMD_APTFILE search $2 | $CMD_AWK '{ print $1, $2; }END { if ( NR == 0 ) exit 1; }'
 				retval=$?
 			else
-				echo "Non of your installed packages provides $2"
+				echo "None of your installed packages provides $2"
 				echo "If you install apt-file we could search in packages that haven't been installed."
 				echo "Type: keg install apt-file to install."
 			fi

@@ -3,6 +3,9 @@ binfiles
 
 A collection of scripts / utilities that I tend to use a lot. 
 
+* vim - a simple until to start macvim if available
+* keg - an abstraction of the jungle that is dpkg and apt-*
+
 Installation
 ------------
 
