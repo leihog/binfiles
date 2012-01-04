@@ -1,0 +1,36 @@
+#!/bin/bash
+
+declare -a keyfiles
+
+if [ -z $1 ]; then
+	echo "Syntax: $0 username@hostname"
+	exit
+fi
+
+FILES=$HOME/.ssh/id_*.pub
+for f in $FILES
+do
+	if [ -f $f ]; then
+		keyfiles=("${keyfiles[@]}" "$f")
+	fi
+done
+
+if [ ${#keyfiles[@]} -lt 1 ]; then
+
+	echo "No ssh key found..."
+	echo "create one with 'ssh-keygen'."
+	exit
+elif [ ${#keyfiles[@]} -gt 1 ]; then
+	
+	echo "Multiple keys found, choose one:"
+	select KEY in ${keyfiles[@]}
+	do
+		break
+	done
+else
+	KEY=${keyfiles[0]}
+fi
+
+echo "Uploading ssh key to $1..."
+ssh -q $* "umask 0077; mkdir -p ~/.ssh ; echo "`cat $KEY`" >> ~/.ssh/authorized_keys"
+echo "done!"
