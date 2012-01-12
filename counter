@@ -12,7 +12,13 @@
 
 import sys
 import time
+import signal
 from optparse import OptionParser
+
+def signal_handler(signal, frame):
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 
 triggers = {}
 
