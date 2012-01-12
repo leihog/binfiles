@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Count occourances of specified characters from stdin
+# Count occurrences of specified characters from stdin
 #
 # examples:
 # ruby -e '10.times{print %w{- +}[rand 2];sleep 0.25}' | counter -t +-
@@ -9,10 +9,15 @@
 # perl -e '$|++;map{print int rand 2?"+":"-";sleep 1}1..10' | counter -t +-
 # Counter: +:3 -:7
 #
+# echo -n "201005+++--+-201006+---+" | ./counter -t "+-" -g "^[0-9]{6}$"
+# 201005 +:4 -:3
+# 201006 +:2 -:3
+#
 
 import sys
 import time
 import signal
+import re
 from optparse import OptionParser
 
 def signal_handler(signal, frame):
@@ -24,10 +29,17 @@ triggers = {}
 
 parser = OptionParser()
 parser.add_option("-t", type="string", dest="triggers")
+parser.add_option("-g", type="string", dest="group")
 (options, args) = parser.parse_args()
 
 for s in options.triggers:
     triggers[s] = 0
+
+if options.group:
+    group_pattern = re.compile(options.group)
+
+buffer = ''
+group = ''
 
 while 1:
     c = sys.stdin.read(1)
@@ -35,9 +47,23 @@ while 1:
         break
 
     if triggers.has_key(c):
-        triggers[c] = triggers[c] + 1
+        if buffer:
+            if options.group and group_pattern.match(buffer):
+                if group:
+                    sys.stdout.write("\n")
+                group = buffer
+                for s in triggers.items():
+                    triggers[s[0]] = 0
+            buffer = ''
 
-    output = "Counter"
+        triggers[c] = triggers[c] + 1
+    else:
+        buffer += c
+
+    if options.group and not group:
+        continue
+
+    output = group or "Counter"
     for s in triggers.items():
         output += " {0}:{1}".format(s[0], s[1])
 
