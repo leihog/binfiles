@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+#
+# Count occourances of specified characters from stdin
+#
+# examples:
+# ruby -e '10.times{print %w{- +}[rand 2];sleep 0.25}' | counter -t +-
+# Counter: +:6 -:4
+#
+# perl -e '$|++;map{print int rand 2?"+":"-";sleep 1}1..10' | counter -t +-
+# Counter: +:3 -:7
+#
+
+import sys
+import time
+from optparse import OptionParser
+
+triggers = {}
+
+parser = OptionParser()
+parser.add_option("-t", type="string", dest="triggers")
+(options, args) = parser.parse_args()
+
+for s in options.triggers:
+    triggers[s] = 0
+
+while 1:
+    c = sys.stdin.read(1)
+    if not c:
+        break
+
+    if triggers.has_key(c):
+        triggers[c] = triggers[c] + 1
+
+    output = "Counter"
+    for s in triggers.items():
+        output += " {0}:{1}".format(s[0], s[1])
+
+    sys.stdout.write("\r%s" % output)
+    sys.stdout.flush()
+
+sys.stdout.write("\n")
+sys.stdout.flush()
+
