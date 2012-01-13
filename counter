@@ -3,22 +3,37 @@
 # Count occurrences of specified characters from stdin
 #
 # examples:
-# ruby -e '10.times{print %w{- +}[rand 2];sleep 0.25}' | counter -t +-
+# ruby -e '10.times{print %w{- +}[rand 2];sleep 0.25}' | counter +-
 # Counter: +:6 -:4
 #
-# perl -e '$|++;map{print int rand 2?"+":"-";sleep 1}1..10' | counter -t +-
+# perl -e '$|++;map{print int rand 2?"+":"-";sleep 1}1..10' | counter +-
 # Counter: +:3 -:7
 #
-# echo -n "201005+++--+-201006+---+" | ./counter -t "+-" -g "^[0-9]{6}$"
+# echo -n "201005+++--+-201006+---+" | counter +- -g "^[0-9]{6}$"
 # 201005 +:4 -:3
 # 201006 +:2 -:3
 #
-
+# Unexpected characters are sent to stderr
+# echo -n "201005+?++--+-201006+---+" | counter +- -g "^[0-9]{6}$"
+# ?
+# 201005 +:4 -:3
+# 201006 +:2 -:3
+#
+# and they can be redirected without hiding the count
+# echo -n "201005+?++--+-201006+---+" | counter +- -g "^[0-9]{6}$" 2>/dev/null
+# 201005 +:4 -:3
+# 201006 +:2 -:3
+#
+# or they can be silenced all together
+# echo -n "201005+?++--+-201006+---+" | counter +- -qg "^[0-9]{6}$"
+# 201005 +:4 -:3
+# 201006 +:2 -:3
+#
 import sys
 import time
 import signal
 import re
-from optparse import OptionParser
+import argparse
 
 def signal_handler(signal, frame):
     sys.exit(0)
@@ -27,19 +42,18 @@ signal.signal(signal.SIGINT, signal_handler)
 
 triggers = {}
 
-parser = OptionParser()
-parser.add_option("-t", type="string", dest="triggers")
-parser.add_option("-g", type="string", dest="group")
-(options, args) = parser.parse_args()
+parser = argparse.ArgumentParser(description='Count occurrences of specified characters from stdin')
+parser.add_argument("characters", type=str, help="The characters to count. ex: +-")
+parser.add_argument("-g", "--group", type=str, dest="group", help="A regexp pattern to group counts by")
+parser.add_argument("-s", "-q", "--suppress", action="store_true", dest="suppress", help="Don't send unrecognised characters to stdout")
+options = parser.parse_args()
 
-for s in options.triggers:
+for s in options.characters:
     triggers[s] = 0
-
-if options.group:
-    group_pattern = re.compile(options.group)
 
 buffer = ''
 group = ''
+prev_row_length = -1
 
 while 1:
     c = sys.stdin.read(1)
@@ -47,13 +61,20 @@ while 1:
         break
 
     if triggers.has_key(c):
-        if buffer:
-            if options.group and group_pattern.match(buffer):
+        if options.group and buffer:
+            m = re.search(options.group, buffer)
+            if m:
                 if group:
                     sys.stdout.write("\n")
-                group = buffer
+                group = m.group(0)
+                buffer = buffer[:m.start()] + buffer[m.end():]
                 for trigger in triggers.keys():
                     triggers[trigger] = 0
+
+        if buffer:
+            if not options.suppress:
+                sys.stderr.write( "\r%s\n" % buffer.ljust(prev_row_length) )
+                sys.stderr.flush()
             buffer = ''
 
         triggers[c] = triggers[c] + 1
@@ -69,6 +90,7 @@ while 1:
 
     sys.stdout.write("\r%s" % output)
     sys.stdout.flush()
+    prev_row_length = len(output)
 
 sys.stdout.write("\n")
 sys.stdout.flush()
