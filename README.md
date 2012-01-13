@@ -3,8 +3,11 @@ binfiles
 
 A collection of scripts / utilities that I tend to use a lot. 
 
-* vim - a simple until to start macvim if available
+* vim - a simple util to start macvim if available
 * keg - an abstraction of the jungle that is dpkg and apt-*
+* copy-sshkey - Will transfer your ssh pub key to remote hosts. For systems
+  where ssh-copy-id is missing (OS X).
+* counter - A tool to count occurrences of characters
 
 Installation
 ------------

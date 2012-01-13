@@ -52,8 +52,8 @@ while 1:
                 if group:
                     sys.stdout.write("\n")
                 group = buffer
-                for s in triggers.items():
-                    triggers[s[0]] = 0
+                for trigger in triggers.keys():
+                    triggers[trigger] = 0
             buffer = ''
 
         triggers[c] = triggers[c] + 1
@@ -64,8 +64,8 @@ while 1:
         continue
 
     output = group or "Counter"
-    for s in triggers.items():
-        output += " {0}:{1}".format(s[0], s[1])
+    for trigger, count in triggers.items():
+        output += " %s:%s" % (trigger, count)
 
     sys.stdout.write("\r%s" % output)
     sys.stdout.flush()
