@@ -45,7 +45,9 @@ triggers = {}
 parser = argparse.ArgumentParser(description='Count occurrences of specified characters from stdin')
 parser.add_argument("characters", type=str, help="The characters to count. ex: +-")
 parser.add_argument("-g", "--group", type=str, dest="group", help="A regexp pattern to group counts by")
-parser.add_argument("-s", "-q", "--suppress", action="store_true", dest="suppress", help="Don't send unrecognised characters to stdout")
+parser.add_argument("-s", "-q", "--suppress", action="store_true", dest="suppress", help="Don't send unrecognised characters to stderr")
+parser.add_argument("-n", "--no-return", action="store_true", dest="noreturn",
+        help="Don't start stderr output with a carriage return. Useful when redirecting stderr")
 options = parser.parse_args()
 
 for s in options.characters:
@@ -73,7 +75,9 @@ while 1:
 
         if buffer:
             if not options.suppress:
-                sys.stderr.write( "\r%s\n" % buffer.ljust(prev_row_length) )
+                if not options.noreturn:
+                    sys.stderr.write( "\r" )
+                sys.stderr.write( "%s\n" % buffer.ljust(prev_row_length) )
                 sys.stderr.flush()
             buffer = ''
 
