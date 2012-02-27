@@ -2,7 +2,7 @@
 #
 # git-flattr-markdown (git-fmd)
 #
-# Genereates a Flattr button in markdown
+# Generates a Flattr button in markdown
 # using config values from a local git repo
 #
 # Author: Leif Högberg (leihog@gmail.com)
