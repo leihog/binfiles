@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# git-flattr-markdown (git-fmd)
+#
+# Genereates a Flattr button in markdown
+# using config values from a local git repo
+#
+# Author: Leif Högberg (leihog@gmail.com)
+# Url: http://github.com/leihog
+##################################################
+
+REMOTES=($(git config --get-regexp ^remote\..*\.url | awk '/git@github.com/ { sub(/^[^:]*:/,""); print}'));
+REMOTE_COUNT=${#REMOTES[@]}
+
+if [ $REMOTE_COUNT -eq 0  ]; then
+	echo "You need to add a github remote."
+	echo "Example: git remote add origin git@github.com:exampleuser/ExampleRepo.git"
+	exit
+elif [ $REMOTE_COUNT -eq 1 ]; then
+	REMOTE=${REMOTES[0]}
+else
+	PS3="Choose remote to use: "
+	select REMOTE in ${REMOTES[@]}
+	do
+		break
+	done
+fi
+
+URL=${REMOTE%.*}
+REPONAME=${REMOTE#*/}
+REPONAME=${REPONAME%.*}
+
+read -e -p "Enter a title ($REPONAME): " TITLE
+if [ -z "$TITLE" ]; then
+	TITLE=$REPONAME
+fi
+
+TITLE=$(echo -n $TITLE | xxd -plain | sed 's/\(..\)/%\1/g')
+MARKDOWN="[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?url=https://github.com/$URL&title=$TITLE)"
+echo $MARKDOWN

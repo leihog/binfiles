@@ -1,8 +1,9 @@
 binfiles
 ========
 
-A collection of scripts / utilities that I tend to use a lot. 
+A collection of scripts / utilities that I tend to use a lot.
 
+* git-fmd - Genereates a Flattr button in markdown using config values from a local git repo
 * vim - a simple util to start macvim if available
 * keg - an abstraction of the jungle that is dpkg and apt-*
 * copy-sshkey - Will transfer your ssh pub key to remote hosts. For systems
