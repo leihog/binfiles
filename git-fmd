@@ -5,6 +5,12 @@
 # Generates a Flattr button in markdown
 # using config values from a local git repo
 #
+# Install
+# Place this script in your bin path.
+#
+# Usage:
+# Type "git fmd" while in a repo
+#
 # Author: Leif Högberg (leihog@gmail.com)
 # Url: http://github.com/leihog
 ##################################################
