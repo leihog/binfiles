@@ -9,6 +9,7 @@ A collection of scripts / utilities that I tend to use a lot.
 * copy-sshkey - Will transfer your ssh pub key to remote hosts. For systems
   where ssh-copy-id is missing (OS X).
 * counter - A tool to count occurrences of characters
+* ssh-keylist - List and show keys from ~/.ssh/authorized_keys
 
 Installation
 ------------

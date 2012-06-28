@@ -1,0 +1,26 @@
+#!/bin/bash
+
+FILE=~/.ssh/authorized_keys
+
+is_int() {
+  if test ${1} -eq ${1} 2>/dev/null; then
+    return 0
+  fi
+  return 1
+}
+
+if [ -z $1 ]; then
+  echo "Authorized keys:"
+  awk '{printf "%2d %s\n", NR, $NF}' $FILE
+
+else
+
+  MAX=`awk 'END { print NR }' $FILE`
+  if is_int $1 && [ "$1" -ge 1 ] && [ "$1" -le $MAX ]; then
+    awk -v line=$1 'NR==line' $FILE
+  else
+    echo "Invalid number."
+  fi
+
+fi
+
