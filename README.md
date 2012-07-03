@@ -3,13 +3,13 @@ binfiles
 
 A collection of scripts / utilities that I tend to use a lot.
 
-* git-fmd - Generates a Flattr button in markdown using config values from a local git repo
-* vim - a simple util to start macvim if available
-* keg - an abstraction of the jungle that is dpkg and apt-*
-* copy-sshkey - Will transfer your ssh pub key to remote hosts. For systems
-  where ssh-copy-id is missing (OS X).
 * counter - A tool to count occurrences of characters
+* git-fmd - Generates a Flattr button in markdown using config values from a local git repo
+* keg - an abstraction of the jungle that is dpkg and apt-*
+* ssh-copykey - Will transfer your ssh pub key to remote hosts. For systems
+  where ssh-copy-id is missing (OS X).
 * ssh-keylist - List and show keys from ~/.ssh/authorized_keys
+* vim - a simple util to start macvim if available
 
 Installation
 ------------
