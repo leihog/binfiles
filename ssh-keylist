@@ -9,7 +9,13 @@ is_int() {
   return 1
 }
 
+if [ ! -f $FILE  ]; then
+  echo "There are no authorized keys on this host."
+  exit
+fi
+
 if [ -z $1 ]; then
+
   echo "Authorized keys:"
   awk '{printf "%2d %s\n", NR, $NF}' $FILE
 
