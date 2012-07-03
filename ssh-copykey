@@ -1,36 +1,61 @@
 #!/bin/bash
+#
+# Will read key from ~/.ssh/id_*.pub by default.
+# Use with '-s' option to read key from stdin.
+#
 
-declare -a keyfiles
+print_syntax() {
+	echo "Syntax $0 [-s] username@hostname"
+	exit 1
+}
+
+OPTIND=1
+STDIN=0
+while getopts ":s" opt; do
+	case "$opt" in
+		s) STDIN=1
+		;;
+		*)
+			print_syntax
+	esac
+done
+shift $((OPTIND - 1))
 
 if [ -z $1 ]; then
-	echo "Syntax: $0 username@hostname"
-	exit
+	print_syntax
 fi
 
-FILES=$HOME/.ssh/id_*.pub
-for f in $FILES
-do
-	if [ -f $f ]; then
-		keyfiles=("${keyfiles[@]}" "$f")
-	fi
-done
-
-if [ ${#keyfiles[@]} -lt 1 ]; then
-
-	echo "No ssh key found..."
-	echo "create one with 'ssh-keygen'."
-	exit
-elif [ ${#keyfiles[@]} -gt 1 ]; then
-	
-	echo "Multiple keys found, choose one:"
-	select KEY in ${keyfiles[@]}
-	do
-		break
-	done
+if [ $STDIN -eq 1 ] ; then
+	KEY=`cat /dev/stdin`
 else
-	KEY=${keyfiles[0]}
+
+	declare -a keyfiles
+	FILES=$HOME/.ssh/id_*.pub
+	for f in $FILES
+	do
+		if [ -f $f ]; then
+			keyfiles=("${keyfiles[@]}" "$f")
+		fi
+	done
+
+	if [ ${#keyfiles[@]} -lt 1 ]; then
+
+		echo "No ssh key found..."
+		echo "create one with 'ssh-keygen'."
+		exit
+	elif [ ${#keyfiles[@]} -gt 1 ]; then
+		
+		echo "Multiple keys found, choose one:"
+		select KEY in ${keyfiles[@]}
+		do
+			break
+		done
+	else
+		KEY=`cat ${keyfiles[0]}`
+	fi
+
 fi
 
 echo "Uploading ssh key to $1..."
-ssh -q $* "umask 0077; mkdir -p ~/.ssh ; echo "`cat $KEY`" >> ~/.ssh/authorized_keys"
+ssh -q $* "umask 0077; mkdir -p ~/.ssh ; echo "$KEY" >> ~/.ssh/authorized_keys"
 echo "done!"
