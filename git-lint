@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# run php lint on all modified files
+for file in `git status -s -uno |grep M | awk '{ print $2 }'`;
+do
+	ext="${file##*.}"
+	if [ "$ext" == "php" ]; then
+		/usr/bin/env php -l $file;
+	fi
+done
