@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# run php lint on all modified files
-for file in `git status -s -uno |grep M | awk '{ print $2 }'`;
+# run php lint on all modified & added files
+for file in `git status -s -uno |grep "^[AM]" | awk '{ print $2 }'`;
 do
 	ext="${file##*.}"
 	if [ "$ext" == "php" ]; then
