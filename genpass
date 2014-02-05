@@ -1,0 +1,59 @@
+#!/bin/bash
+
+LEN=12
+TYPE="[:graph:]"
+
+function help {
+	echo "Usage: $0 [-l <length>] [-t <type>]"
+	echo
+	echo "Types:"
+	echo "  alpha:  all letters"
+	echo "  alnum:  all letters and digits"
+	echo "  digits: all digits"
+	echo "  graph:  allprintable characters, not including space "
+	echo
+	echo "If no options are specified '-l 12 -t graph' will be used."
+}
+
+while getopts ":l:t:h" opt; do
+	case $opt in
+	l)
+		re='^[0-9]+$'
+		if ! [[ $OPTARG =~ $re ]] ; then
+			echo "Option -l requires a numeric argument.";
+			exit 1;
+		fi
+		LEN=$OPTARG
+		;;
+	t)
+		found=0;
+		TYPES=(alnum alpha digit graph);
+		for i in "${TYPES[@]}"
+		do
+			if [ "$i" == "$OPTARG" ] ; then
+				TYPE="[:$OPTARG:]"
+				found=1;
+			fi
+		done
+
+		if [ "$found" -eq "0" ] ; then
+			echo "Invalid argument for option -t";
+			exit 1;
+		fi
+		;;
+	h)
+		help;
+		exit 1;
+		;;
+	\?)
+		echo "Invalid option: -$OPTARG"
+		exit 1;
+		;;
+	:)
+		echo "Option -$OPTARG requires an argument."
+		exit 1
+		;;
+	esac
+done
+
+echo `env LC_CTYPE=C tr -dc $TYPE < /dev/urandom | head -c $LEN`
