@@ -1,0 +1,207 @@
+#!/bin/bash
+#
+# Code by Leif Högberg <github: leihog>
+# Dice ascii art by jgs
+#
+###
+
+choices=()
+choice_numbers=()
+assigned_numbers=()
+
+num_dice=0
+spots_per_die=0
+
+
+menu() {
+    local menu_choices=()
+    local menu_indices=()
+    local prompt=
+    for c in $1; do
+        local ca=(${c//:/ })
+        menu_indices+=(${ca[0]})
+        menu_choices+=(${ca[1]})
+        prompt+=${ca[0]}
+    done
+
+    [[ $2 != "" ]] && echo -e "$2"
+    echo -n "[$prompt]"
+
+    while true; do
+        read -rsn1 input
+        for i in ${!menu_indices[@]}; do
+            if [[ ${menu_indices[$i]} == $input ]]; then
+
+                echo
+                local cmd=${menu_choices[$i]}
+                if [[ ${cmd:0:1} == "!" ]]; then
+                    ${cmd:1} && return $?
+                fi
+
+                $cmd
+                echo
+                echo -e "$2"
+                echo -n "[$prompt]"
+                break
+            fi
+        done
+    done
+}
+
+trap quit EXIT
+quit() {
+    echo
+    echo "Thank you, come again."
+    exit
+}
+
+nop() {
+    return 0
+}
+
+main_prompt() {
+    [ ${#choices[@]} -gt 0 ] && echo -n "[a,r,h,q]:" || echo -n "[a,h,q]"
+}
+
+collect_choices() {
+    echo "When you are done enter a single dot [.]"
+
+    local csize=${#choices[@]}
+    local cindex=$((csize + 1))
+    while true; do
+        echo
+        echo -n "Enter a name/description: "
+        read input
+
+        [[ $input == "." ]] && break
+
+        choices[$cindex]=$input
+        cindex=$((cindex + 1))
+
+
+        echo
+        echo "Possible choices are:"
+        for c in "${choices[@]}"; do
+            echo "  $c"
+        done
+    done
+
+    echo
+    echo "Possible choices are:"
+    for c in "${choices[@]}"; do
+        echo "  $c"
+    done
+}
+
+six_sided_die_with_automatic_assignment() {
+    num_dice=0
+    spots_per_die=6
+
+    local spots=$spots_per_die
+    while true; do
+        num_dice=$((num_dice + 1))
+        if [[ $(( ($spots - $num_dice + 1) % ${#choices[@]} )) != 0 ]]; then
+            spots=$((spots + $spots_per_die)) && continue
+        fi
+
+        num_per_choice=$(( $spots / ${#choices[@]} ))
+        break
+    done
+
+    local min_num=$num_dice
+    local max_num=$spots
+
+    echo
+    echo Number of choices: ${#choices[@]}
+    echo Number of dice: $num_dice
+    echo Numbers per choice: $num_per_choice
+    echo assigning numbers between $min_num and $max_num
+    echo
+
+    local valid_numbers=()
+    for ((i=min_num; i<=max_num; i++)); do
+        valid_numbers+=($i)
+    done
+
+    # shuffle using Knuth-Fisher-Yates shuffle algorithm
+    local i rand size tmp
+    size=${#valid_numbers[*]}
+    for ((i=size; i>0; i--)); do
+        rand=$(( RANDOM % (i+1) ))
+
+        tmp=${valid_numbers[i]}
+        valid_numbers[i]=${valid_numbers[rand]}
+        valid_numbers[rand]=$tmp
+    done
+
+    # assign numbers
+    local ci=1
+    local c_max=${#choices[@]}
+    for num in ${valid_numbers[@]}; do
+        assigned_numbers[$num]=$ci
+        choice_numbers[$ci]="${choice_numbers[$ci]} $num"
+        [[ $ci < $c_max ]] && ci=$((ci + 1)) || ci=1
+    done
+
+    for i in ${!choice_numbers[@]}; do
+        echo "${choices[$i]}: " ${choice_numbers[$i]}
+    done
+}
+
+roll_dice() {
+
+    echo
+    local rand max i total
+    max=$(( 32768 / spots_per_die * spots_per_die ))
+
+    total=0
+    for (( i=1; i<=num_dice; i++ )); do
+
+        while (( (rand=$RANDOM) >= max )); do :; done
+        rand=$(( rand % spots_per_die + 1 ))
+        total=$((total + rand))
+
+        [[ $num_dice > 1 ]] && echo "Rolling die #$i: $rand"
+
+    done
+
+    c_index=${assigned_numbers[$total]}
+    echo "The result is $total which means that"
+    echo "the winner is:" ${choices[$c_index]}
+}
+
+show_splash() {
+cat <<"Fossa"
+
+        .-------.    ______
+       /   o   /|   /\     \
+      /_______/o|  /o \  o  \
+      | o     | | /   o\_____\
+      |   o   |o/ \o   /o    /
+      |     o |/   \ o/  o  /
+      '-------'     \/____o/
+
+           choose-or-die
+          by Leif Högberg
+
+Fossa
+}
+
+show_splash
+
+echo "Start by adding choices"
+collect_choices
+
+# TODO is there a better way to setup the menu?
+echo
+menu "a:collect_choices c:!nop" "To continue press [c]. Press [a] to add more choices or ctrl+c to quit."
+
+# algorithm that uses multiple six sided die
+echo
+echo "Calculating the number of dice to use and assigning numbers"
+six_sided_die_with_automatic_assignment
+
+echo
+echo "Thats it! We have what we need, the rest is up to lady luck."
+echo "Whenever you are ready, press [r] to roll the dice."
+menu "r:!roll_dice"
