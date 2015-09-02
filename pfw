@@ -1,0 +1,30 @@
+#!/bin/sh
+
+if [ $# -ne 2 ] && [ $# -ne 3 ]; then
+    echo "Simple port forwarding"
+    echo
+    echo "$0 <listen port> <service host>"
+    echo "$0 <listen port> <service port>"
+    echo "$0 <listen port> <service host> <service port>"
+
+    echo
+    echo "If service port is omitted then the listening port will be used."
+    echo "If service host is omitted then localhost will be used."
+    exit 1
+fi
+
+listen=$1
+
+if [ $# -eq 3 ]; then
+    shost=$2
+    sport=$3
+elif [ $2 -eq $2 ] 2>/dev/null; then
+    shost="localhost"
+    sport=$2
+else
+    shost=$2
+    sport=$1
+fi
+
+echo "Forwarding $listen to $shost:$sport"
+ncat -l $port --sh-exec "ncat $shost $sport" --keep-open
