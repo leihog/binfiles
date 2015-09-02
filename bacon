@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+import re
+import sys
+import getopt
+
+def main(argv):
+    if not argv:
+        print("Syntax: bacon [option] <value>")
+
+        print("\nOptions:")
+        print("\t-k --kb:  output in kb")
+        print("\t-m --mb:  output in mb")
+        print("\t-g --gb:  output in gb")
+        print("\t-t --tb:  output in tb")
+
+        print("\nValue should be a numeric string")
+        print("optionally followed by k, m, g to specify unit.")
+        print("If no unit is given bytes is assumed.")
+        sys.exit(1)
+
+    try:
+        opts, args = getopt.getopt(argv,"kmgt", ["kb","mb","gb", "tb"])
+    except getopt.GetoptError:
+        print("u crazy?")
+        sys.exit(2)
+
+    to = "g"
+    for opt, arg in opts:
+        if opt in ("-k", "--kb"):
+            to = "k"
+        elif opt in ("-m", "--mb"):
+            to = "m"
+        elif opt in ("-g", "--gb"):
+            to = "g"
+        elif opt in ("-t", "--tb"):
+            to = "t"
+
+    bytes = args[0]
+
+    a = {'k' : 1, 'm': 2, 'g' : 3, 't' : 4}
+    b = a[to]
+
+    m = re.match(r"^(\d+)([bkmgtp]?)$", bytes)
+    if m is None:
+        print("Invalid input...")
+        sys.exit()
+
+    bytes = m.group(1)
+    if m.group(2):
+        b -= a[m.group(2)]
+
+    r = float(bytes)
+    for i in range(b):
+        r = r / 1024
+
+    output = str(int(r)) + to + "b"
+    print(output)
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
