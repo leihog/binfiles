@@ -50,6 +50,7 @@ else
         echo "Multiple keys found, choose one:"
         select KEY in ${keyfiles[@]}
         do
+            KEY=`cat $KEY`
             break
         done
     else

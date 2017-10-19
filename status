@@ -1,0 +1,15 @@
+#!/bin/bash
+
+cmd=$(basename $0)
+
+if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    git $cmd "$@"
+else
+    alt=`which -a ${cmd} | sed -n 2p`
+    if [ "$alt" ]; then
+        $alt "$@"
+        exit
+    fi
+
+    echo "huh?"
+fi
